@@ -35,12 +35,12 @@ class App(ctk.CTk):
         self.label.pack(pady=(40, 20)) # Margen superior de 40 y inferior de 20
 
         # --- CAMPO DE TEXTO: USUARIO ---
-        self.user_entry = ctk.CTkEntry(
+        self.mail_entry = ctk.CTkEntry(
             self.main_frame, 
             width=250, 
-            placeholder_text="Usuario" # Texto que desaparece al escribir
+            placeholder_text="email" # Texto que desaparece al escribir
         )
-        self.user_entry.pack(pady=10) # Espaciado vertical entre elementos
+        self.mail_entry.pack(pady=10) # Espaciado vertical entre elementos
 
         # --- CAMPO DE TEXTO: CONTRASEÑA ---
         self.pass_entry = ctk.CTkEntry(
@@ -70,13 +70,15 @@ class App(ctk.CTk):
     # --- LÓGICA DE VALIDACIÓN ---
     def login_event(self):
         # .get() extrae el texto actual que el usuario escribió en los campos
-        username = self.user_entry.get()
+        email = self.mail_entry.get()
         password = self.pass_entry.get()
 
         # Validación condicional: Comparamos con datos fijos (hardcoded)
-        if username == "admin" and password == "1234":
+        if email == "admin@gmail.com" and password == "1234":
             # Si coinciden, muestra ventana de información (icono azul)
-            messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {username}")
+            messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {email}")
+        elif "@" not in email or  email not in ".com":
+            messagebox.showinfo("Error", f"campo de email sin @ o .com")
         else:
             # Si fallan, muestra ventana de error (icono rojo)
             messagebox.showerror("Error", "Usuario o contraseña incorrectos")
