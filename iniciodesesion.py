@@ -74,7 +74,7 @@ class App(ctk.CTk):
         password = self.pass_entry.get()
 
         # Validación condicional: Comparamos con datos fijos (hardcoded)
-        if email == "admin@gmail.com" and password == "1234":
+        if email == "admin@farmacia.com" and password == "1234":
             # Si coinciden, muestra ventana de información (icono azul)
             messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {email}")
         elif "@" not in email or  email not in ".com":
