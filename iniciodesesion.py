@@ -1,6 +1,7 @@
 import customtkinter as ctk  # Importamos la librería para la interfaz moderna
 from tkinter import messagebox  # Importamos el módulo para ventanas emergentes (alertas)
 import os
+import subprocess
 
 
 # --- CONFIGURACIÓN GLOBAL ---
@@ -78,8 +79,11 @@ class App(ctk.CTk):
         # Validación condicional: Comparamos con datos fijos (hardcoded)
         if email == "admin@farmacia.com" and password == "1234":
             # Si coinciden, muestra ventana de información (icono azul)
+            self.destroy()
             messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {email}")
             os.system('python pantallaprincipal.py')
+            
+           
             
         elif "@" not in email or  email not in ".com":
             messagebox.showinfo("Error", f"campo de email sin @ o .com")
