@@ -1,7 +1,8 @@
 import customtkinter as ctk  # Importamos la librería para la interfaz moderna
+import tkinter as tk
 from tkinter import messagebox  # Importamos el módulo para ventanas emergentes (alertas)
 import os
-import subprocess
+from PIL import Image, ImageTk # Importamos PIL para manejo avanzado de imágenes
 
 
 # --- CONFIGURACIÓN GLOBAL ---
@@ -17,7 +18,7 @@ class App(ctk.CTk):
 
         # Configuración básica de la ventana
         self.title("Sistema de Acceso")  # Texto que aparece en la barra superior
-        self.geometry("400x450")        # Tamaño: 400 píxeles de ancho por 450 de alto
+        self.geometry("400x550")        # Aumentar un poco la altura para la imagen
 
         # Configuración del sistema de cuadrícula (Grid)
         # Esto asegura que los elementos se mantengan centrados
@@ -25,18 +26,66 @@ class App(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
 
         # --- CREACIÓN DEL CONTENEDOR (FRAME) ---
+        
         # El Frame es como una "tarjeta" que agrupa los elementos internos
         self.main_frame = ctk.CTkFrame(self, corner_radius=15) # Esquinas redondeadas de 15px
         self.main_frame.grid(row=0, column=0, padx=20, pady=20, sticky="nsew")
 
-        # --- ETIQUETA DE TÍTULO ---
-        self.label = ctk.CTkLabel(
+        # --- AGREGAR LA IMAGEN ---
+        # 1. Cargar la imagen con PIL
+        # REEMPLAZA "logo_farmacia.png" CON TU ARCHIVO DE IMAGEN
+        ruta_imagen = "marca.png"
+        
+        # DEMO: Lógica para crear una imagen de demostración si no existe tu archivo
+        if not os.path.exists(ruta_imagen):
+             print(f"Advertencia: No se encontró la imagen '{ruta_imagen}'. Usando una imagen de demostración.")
+             # Crear una imagen azul de demostración de 100x100
+             pil_image_for_logo = Image.new('RGB', (100, 100), color = (0, 120, 215)) # Color azul ctk
+        else:
+             # Cargar con PIL
+             try:
+                 pil_image_for_logo = Image.open(ruta_imagen)
+                 # Redimensionar la imagen si es necesario
+                 pil_image_for_logo = pil_image_for_logo.resize((300, 50)) # Tamaño de 100x100
+             except Exception as e:
+                 print(f"Error cargando imagen: {e}")
+                 pil_image_for_logo = Image.new('RGB', (100, 100), color = 'red') # Imagen de error
+
+        # 2. Convertir a un formato CTkImage
+        # Esto es necesario para que ctk lo maneje correctamente
+        self.logo_image = ctk.CTkImage(
+            light_image=pil_image_for_logo, 
+            dark_image=pil_image_for_logo, 
+            size=(250, 100) # Tamaño de visualización
+        )
+
+        # 3. Crear el widget de imagen y colocarlo arriba
+        self.image_label = ctk.CTkLabel(
             self.main_frame, 
-            text="Iniciar Sesión", 
+            image=self.logo_image, 
+            text="" # Sin texto para que solo sea imagen
+        )
+        # pack() con un poco de margen superior e inferior
+        self.image_label.pack(pady=(30, 10)) 
+
+        # --- ETIQUETA DE TÍTULO PRINCIPAL ---
+        # Código original: self.label = ctk.CTkLabel(..., pady=(40, 20))
+        # Ahora ajustamos el pady para que esté cerca de la imagen
+        self.label_titulo = ctk.CTkLabel(
+            self.main_frame, 
+            text="Sistema de Farmacia", 
             font=ctk.CTkFont(size=24, weight="bold") # Fuente grande y en negrita
         )
-        self.label.pack(pady=(40, 20)) # Margen superior de 40 y inferior de 20
+        self.label_titulo.pack(pady=(0, 20)) # Margen superior 0, inferior 20
 
+        # --- ETIQUETA DE TÍTULO DE INICIO ---
+        self.label_iniciar = ctk.CTkLabel(
+            self.main_frame, 
+            text="Iniciar Sesión para continuar", 
+            font=ctk.CTkFont(size=13, weight="bold") # Fuente grande y en negrita
+        )
+        self.label_iniciar.pack(pady=(10, 5)) 
+        
         # --- CAMPO DE TEXTO: USUARIO ---
         self.mail_entry = ctk.CTkEntry(
             self.main_frame, 
@@ -61,16 +110,11 @@ class App(ctk.CTk):
             command=self.login_event, # Llama a la función 'login_event' al hacer clic
             width=250
         )
-        self.login_button.pack(pady=(30, 10))
+        self.login_button.pack(pady=(30, 20)) # Margen inferior para el final
 
-        # --- CHECKBOX (CASILLA DE SELECCIÓN) ---
-        self.remember_checkbox = ctk.CTkCheckBox(
-            self.main_frame, 
-            text="Recordarme"
-        )
-        self.remember_checkbox.pack(pady=10)
 
-    # --- LÓGICA DE VALIDACIÓN ---
+
+    # --- LÓGICA DE VALIDACIÓN (sin cambios) ---
     def login_event(self):
         # .get() extrae el texto actual que el usuario escribió en los campos
         email = self.mail_entry.get()
@@ -81,11 +125,12 @@ class App(ctk.CTk):
             # Si coinciden, muestra ventana de información (icono azul)
             self.destroy()
             messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {email}")
+            # Descomenta la siguiente línea para ejecutar tu otra pantalla
             os.system('python pantallaprincipal.py')
             
            
             
-        elif "@" not in email or  email not in ".com":
+        elif "@" not in email or email not in ".com":
             messagebox.showinfo("Error", f"campo de email sin @ o .com")
         else:
             # Si fallan, muestra ventana de error (icono rojo)
