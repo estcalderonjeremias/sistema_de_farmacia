@@ -7,7 +7,7 @@ from PIL import Image, ImageTk # Importamos PIL para manejo avanzado de imágene
 
 # --- CONFIGURACIÓN GLOBAL ---
 # Establece el modo oscuro (puedes cambiar "dark" por "light")
-ctk.set_appearance_mode("dark")  
+ctk.set_appearance_mode("light")  
 # Establece el color de los botones y acentos (azul por defecto)
 ctk.set_default_color_theme("blue")  
 
@@ -17,7 +17,7 @@ class App(ctk.CTk):
         super().__init__()  # Inicializa la configuración de la ventana padre (CTk)
 
         # Configuración básica de la ventana
-        self.title("Sistema de Acceso")  # Texto que aparece en la barra superior
+        self.title("inicio de sesion")  # Texto que aparece en la barra superior
         self.geometry("400x550")        # Aumentar un poco la altura para la imagen
 
         # Configuración del sistema de cuadrícula (Grid)
@@ -34,7 +34,7 @@ class App(ctk.CTk):
         # --- AGREGAR LA IMAGEN ---
         # 1. Cargar la imagen con PIL
         # REEMPLAZA "logo_farmacia.png" CON TU ARCHIVO DE IMAGEN
-        ruta_imagen = "marca.png"
+        ruta_imagen = "logooo.png"
         
         # DEMO: Lógica para crear una imagen de demostración si no existe tu archivo
         if not os.path.exists(ruta_imagen):
