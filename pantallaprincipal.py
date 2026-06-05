@@ -22,11 +22,12 @@ class PharmacyApp(ctk.CTk):
             {"id": 5, "prod": "Omeprazol 20mg", "marca": "Genérico", "cat": "Gástrico", "prov": "Medistore", "stock": 40, "costo": 8.00, "precio": 16.00},
         ]
 
+        # Se eliminó la clave "vend" del historial de ventas
         self.sales_history = [
-            {"id": "#1", "prod": "Paracetamol 500mg", "cant": 2, "total": 11.00, "vend": "Juan Pérez", "fecha": "2026-03-15 10:30"},
-            {"id": "#2", "prod": "Ibuprofeno 400mg", "cant": 1, "total": 7.00, "vend": "María García", "fecha": "2026-03-16 11:15"},
-            {"id": "#3", "prod": "Amoxicilina 500mg", "cant": 3, "total": 37.50, "vend": "Juan Pérez", "fecha": "2026-03-20 14:20"},
-            {"id": "#4", "prod": "Omeprazol 20mg", "cant": 2, "total": 32.00, "vend": "Ana Empleada", "fecha": "2026-02-25 09:45"},
+            {"id": "#1", "prod": "Paracetamol 500mg", "cant": 2, "total": 11.00, "fecha": "2026-03-15 10:30"},
+            {"id": "#2", "prod": "Ibuprofeno 400mg", "cant": 1, "total": 7.00, "fecha": "2026-03-16 11:15"},
+            {"id": "#3", "prod": "Amoxicilina 500mg", "cant": 3, "total": 37.50, "fecha": "2026-03-20 14:20"},
+            {"id": "#4", "prod": "Omeprazol 20mg", "cant": 2, "total": 32.00, "fecha": "2026-02-25 09:45"},
         ]
 
         self.cart = [] # Almacena los productos temporales de la nueva venta
@@ -73,7 +74,7 @@ class PharmacyApp(ctk.CTk):
         self.build_inventory_tab()
         self.build_sales_tab()
         
-        self.tabview.set("Ventas") # Cambiado temporalmente para que veas la nueva pestaña primero
+        self.tabview.set("Ventas") 
 
     # ==========================================
     #             PESTAÑA INVENTARIO
@@ -133,13 +134,6 @@ class PharmacyApp(ctk.CTk):
                                            variable=self.month_filter_var, command=self.filter_sales)
         self.combo_month.pack(side="left", padx=(0, 15))
 
-        # Filtro de Vendedor
-        ctk.CTkLabel(filters_frame, text="Filtrar por Vendedor:").pack(side="left", padx=(0, 5))
-        self.seller_filter_var = ctk.StringVar(value="Todos los vendedores")
-        self.combo_seller = ctk.CTkComboBox(filters_frame, values=["Todos los vendedores", "Juan Pérez", "María García", "Ana Empleada"], 
-                                            variable=self.seller_filter_var, command=self.filter_sales)
-        self.combo_seller.pack(side="left", padx=(0, 15))
-
         # Botón Limpiar Filtros
         ctk.CTkButton(filters_frame, text="Limpiar Filtros", fg_color="gray", hover_color="darkgray", text_color="black", 
                       command=self.clear_sales_filters).pack(side="right")
@@ -148,8 +142,8 @@ class PharmacyApp(ctk.CTk):
         self.lbl_sales_count = ctk.CTkLabel(self.sales_tab, text="Mostrando ventas...", text_color="gray")
         self.lbl_sales_count.pack(anchor="w", padx=10)
 
-        # Tabla de Ventas
-        self.tree_sales = ttk.Treeview(self.sales_tab, columns=("ID", "Producto", "Cantidad", "Total", "Vendido Por", "Fecha"), show="headings")
+        # Tabla de Ventas (Se eliminó la columna vendedor)
+        self.tree_sales = ttk.Treeview(self.sales_tab, columns=("ID", "Producto", "Cantidad", "Total", "Fecha"), show="headings")
         for col in self.tree_sales["columns"]:
             self.tree_sales.heading(col, text=col)
             width = 150 if col in ("Producto", "Fecha") else 80
@@ -235,7 +229,6 @@ class PharmacyApp(ctk.CTk):
         ctk.CTkButton(cart_panel, text="Cancelar", fg_color="transparent", border_width=1, hover_color="#333", command=self.ns_win.destroy).pack(fill="x", padx=20, pady=(0, 20))
 
     def render_sale_products(self):
-        """Renderiza cada producto del inventario como una tarjeta para agregar a la venta"""
         for widget in self.products_frame.winfo_children():
             widget.destroy()
 
@@ -255,7 +248,7 @@ class PharmacyApp(ctk.CTk):
             ctk.CTkLabel(badges_frame, text=f"Droga: {p['cat']}", text_color="#a855f7", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0,5))
             ctk.CTkLabel(badges_frame, text=f"Prov: {p['prov']}", text_color="#10b981", font=ctk.CTkFont(size=10)).pack(side="left")
 
-            # Info Derecha (Precio, Stock, Botón)
+            # Info Derecha
             action_frame = ctk.CTkFrame(card, fg_color="transparent")
             action_frame.pack(side="right", padx=15, pady=10)
             
@@ -268,8 +261,6 @@ class PharmacyApp(ctk.CTk):
                           command=lambda item=p: self.add_to_cart(item)).pack(side="right")
 
     def add_to_cart(self, product):
-        """Añade un producto al carrito temporal y actualiza la vista"""
-        # Verificar si ya está en el carrito
         found = False
         for c_item in self.cart:
             if c_item["id"] == product["id"]:
@@ -290,7 +281,6 @@ class PharmacyApp(ctk.CTk):
         self.update_cart_ui()
 
     def update_cart_ui(self):
-        """Refresca el panel derecho del carrito"""
         for widget in self.cart_items_frame.winfo_children():
             widget.destroy()
 
@@ -322,20 +312,18 @@ class PharmacyApp(ctk.CTk):
         self.lbl_total_price.configure(text=f"${total_price:.2f}")
 
     def complete_sale(self):
-        """Procesa la venta, descuenta stock y guarda en el historial"""
         if not self.cart: return
         
         total = sum(i["precio"]*i["cant"] for i in self.cart)
         
-        # 1. Registrar venta por cada producto (simulando desglose)
+        # 1. Registrar venta por cada producto (Se eliminó "vend")
         nuevo_id = f"#{len(self.sales_history) + 1}"
         for item in self.cart:
-            self.sales_history.insert(0, { # Insertar al principio para que salga arriba
+            self.sales_history.insert(0, { 
                 "id": nuevo_id,
                 "prod": item["prod"],
                 "cant": item["cant"],
                 "total": item["precio"] * item["cant"],
-                "vend": "Usuario Actual", # Aquí iría el sistema de logueo real
                 "fecha": datetime.now().strftime("%Y-%m-%d %H:%M")
             })
             
@@ -346,7 +334,7 @@ class PharmacyApp(ctk.CTk):
 
         # 3. Actualizar tablas e interfaz
         self.update_inventory_table()
-        self.filter_sales() # Actualiza tabla de ventas
+        self.filter_sales() 
         
         messagebox.showinfo("Éxito", f"Venta completada con éxito. Total: ${total:.2f}")
         self.ns_win.destroy()
@@ -366,10 +354,9 @@ class PharmacyApp(ctk.CTk):
             self.tree_inv.insert("", "end", values=(p["id"], p["prod"], p["marca"], p["cat"], p["stock"], f"${p['precio']:.2f}"))
 
     def filter_sales(self, *args):
-        """Aplica la búsqueda, filtro de mes y vendedor a la tabla de ventas"""
-        term = self.search_sale_var.get().lower()
+        # Se solucionó el error de sintaxis que tenías aquí
+        term = self.search_sale_var.get().lower() 
         mes = self.month_filter_var.get()
-        vendedor = self.seller_filter_var.get()
 
         for item in self.tree_sales.get_children(): self.tree_sales.delete(item)
         
@@ -377,15 +364,16 @@ class PharmacyApp(ctk.CTk):
         for s in self.sales_history:
             # Lógica de filtros
             match_term = term in s["prod"].lower()
-            match_vendedor = (vendedor == "Todos los vendedores") or (vendedor == s["vend"])
             
-            # Lógica de fecha simple (simulada basada en el string)
+            # Lógica de fecha simple
             match_mes = True
             if mes == "marzo de 2026": match_mes = "-03-" in s["fecha"]
             elif mes == "febrero de 2026": match_mes = "-02-" in s["fecha"]
 
-            if match_term and match_vendedor and match_mes:
-                self.tree_sales.insert("", "end", values=(s["id"], s["prod"], s["cant"], f"${s['total']:.2f}", s["vend"], s["fecha"]))
+            # Eliminado match_vendedor
+            if match_term and match_mes:
+                # La inserción ya no pasa el argumento 'vendedor'
+                self.tree_sales.insert("", "end", values=(s["id"], s["prod"], s["cant"], f"${s['total']:.2f}", s["fecha"]))
                 count += 1
                 
         self.lbl_sales_count.configure(text=f"Mostrando {count} de {len(self.sales_history)} ventas")
@@ -396,14 +384,14 @@ class PharmacyApp(ctk.CTk):
     def clear_sales_filters(self):
         self.search_sale_var.set("")
         self.month_filter_var.set("Todos los meses")
-        self.seller_filter_var.set("Todos los vendedores")
         self.filter_sales()
 
     # Métodos heredados del original...
     def open_add_window(self):
-        pass # Puedes integrar el mismo que ya tenías
+        pass 
+        
     def delete_product(self):
-        pass # Puedes integrar el mismo que ya tenías
+        pass 
 
 if __name__ == "__main__":
     app = PharmacyApp()
