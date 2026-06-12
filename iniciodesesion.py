@@ -2,6 +2,8 @@ import customtkinter as ctk  # Importamos la librería para la interfaz moderna
 import tkinter as tk
 from tkinter import messagebox  # Importamos el módulo para ventanas emergentes (alertas)
 import os
+import subprocess
+import sys
 from PIL import Image, ImageTk # Importamos PIL para manejo avanzado de imágenes
 
 
@@ -27,7 +29,7 @@ class App(ctk.CTk):
         # --- NUEVO: AGREGAR IMAGEN DE FONDO ---
         # ==========================================
         # PON AQUÍ LA DIRECCIÓN DE TU FOTO DE FONDO
-        ruta_fondo = "fondo.png"  
+        ruta_fondo = os.path.join(os.path.dirname(os.path.abspath(__file__)), "imagenes", "fondo.png")
         
         if not os.path.exists(ruta_fondo):
             print(f"Advertencia: No se encontró el fondo '{ruta_fondo}'. Usando fondo gris de demo.")
@@ -54,7 +56,7 @@ class App(ctk.CTk):
         self.main_frame.grid(row=0, column=0, padx=30, pady=30, sticky="nsew")
 
         # --- AGREGAR LA IMAGEN DE LOGO ---
-        ruta_imagen = "logoo.png"
+        ruta_imagen = os.path.join(os.path.dirname(os.path.abspath(__file__)), "imagenes", "logoo.png")
         
         if not os.path.exists(ruta_imagen):
              print(f"Advertencia: No se encontró la imagen '{ruta_imagen}'. Usando una imagen de demostración.")
@@ -94,7 +96,7 @@ class App(ctk.CTk):
         self.mail_entry = ctk.CTkEntry(
             self.main_frame, 
             width=250, 
-            placeholder_text="email" 
+            placeholder_text="Email" 
         )
         self.mail_entry.pack(pady=10) 
 
@@ -125,7 +127,10 @@ class App(ctk.CTk):
         if email == "admin@farmacia.com" and password == "1234":
             self.destroy()
             messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {email}")
-            os.system('python pantallaprincipal.py')
+            subprocess.Popen(
+                [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pantallaprincipal.py")],
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
             
         elif "@" not in email or email not in ".com":
             messagebox.showinfo("Error", f"campo de email sin @ o .com")

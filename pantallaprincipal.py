@@ -20,6 +20,16 @@ class PharmacyApp(ctk.CTk):
             {"id": 3, "prod": "Ibuprofeno 400mg", "marca": "Pfizer", "cat": "Antiinflamatorio", "prov": "Farmacity Dist", "stock": 85, "costo": 2.00, "precio": 7.00},
             {"id": 4, "prod": "Amoxicilina 500mg", "marca": "GlaxoSmithKline", "cat": "Antibiótico", "prov": "Droguería Sur", "stock": 80, "costo": 5.00, "precio": 12.50},
             {"id": 5, "prod": "Omeprazol 20mg", "marca": "Genérico", "cat": "Gástrico", "prov": "Medistore", "stock": 40, "costo": 8.00, "precio": 16.00},
+            {"id": 6, "prod": "Aspirina 100mg", "marca": "Bayer", "cat": "Antiagregante", "prov": "Droguería Sur", "stock": 120, "costo": 1.10, "precio": 3.80},
+            {"id": 7, "prod": "Diclofenac 50mg", "marca": "Novartis", "cat": "Antiinflamatorio", "prov": "Medistore", "stock": 70, "costo": 1.80, "precio": 6.20},
+            {"id": 8, "prod": "Cetirizina 10mg", "marca": "Genérico", "cat": "Antihistamínico", "prov": "Farmacity Dist", "stock": 35, "costo": 1.00, "precio": 3.50},
+            {"id": 9, "prod": "Salbutamol Inhalador", "marca": "GlaxoSmithKline", "cat": "Respiratorio", "prov": "Droguería Norte", "stock": 18, "costo": 6.50, "precio": 14.00},
+            {"id": 10, "prod": "Metformina 850mg", "marca": "Roemmers", "cat": "Antidiabético", "prov": "Medistore", "stock": 60, "costo": 3.20, "precio": 8.90},
+            {"id": 11, "prod": "Losartan 50mg", "marca": "Bagó", "cat": "Antihipertensivo", "prov": "Droguería Sur", "stock": 55, "costo": 2.70, "precio": 7.50},
+            {"id": 12, "prod": "Atorvastatina 20mg", "marca": "Pfizer", "cat": "Cardiovascular", "prov": "Farmacity Dist", "stock": 42, "costo": 4.10, "precio": 10.50},
+            {"id": 13, "prod": "Clonazepam 0.5mg", "marca": "Roche", "cat": "Psicotrópico", "prov": "Droguería Norte", "stock": 25, "costo": 2.40, "precio": 6.80},
+            {"id": 14, "prod": "Vitamina C 1g", "marca": "Redoxon", "cat": "Suplemento", "prov": "Medistore", "stock": 90, "costo": 1.50, "precio": 4.90},
+            {"id": 15, "prod": "Alcohol en Gel 500ml", "marca": "Porta", "cat": "Higiene", "prov": "Droguería Sur", "stock": 110, "costo": 2.20, "precio": 5.00},
         ]
 
         # Se eliminó la clave "vend" del historial de ventas
