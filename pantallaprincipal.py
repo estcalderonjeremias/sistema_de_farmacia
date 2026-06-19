@@ -4,12 +4,13 @@ from tkinter import ttk
 from inventario import InventarioMixin
 from recetas import RecetasMixin
 from ventas import VentasMixin
-
+import sqlite3
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-
+conn = sqlite3.connect("labase.db")
+cur = conn.cursor()
 class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin):
     def __init__(self):
         super().__init__()
