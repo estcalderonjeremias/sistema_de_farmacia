@@ -150,7 +150,8 @@ class InventarioMixin:
         # Crear la ventana secundaria
         add_win = ctk.CTkToplevel(self)
         add_win.title("Agregar Nuevo Producto")
-        add_win.geometry("420x500")
+        # Aumentamos ligeramente el alto a 550 para que los desplegables tengan buen espacio
+        add_win.geometry("420x550") 
         add_win.attributes("-topmost", True)
         add_win.grab_set()
 
@@ -167,16 +168,31 @@ class InventarioMixin:
             ("costo", "Costo"),
         ]
 
+        # Listas estáticas basadas en los datos de tu inventario (ordenadas alfabéticamente)
+        opciones_desplegables = {
+            "marca": ["Bago", "Bayer", "Generico", "GlaxoSmithKline", "Novartis", "Pfizer", "Porta", "Redoxon", "Roche", "Roemmers", "Ultra-Health"],
+            "cat": ["Analgesico", "Antiagregante", "Antibiotico", "Antidiabetico", "Antihistaminico", "Antihipertensivo", "Antiinflamatorio", "Cardiovascular", "Gastrico", "Higiene", "Psicotropico", "Respiratorio", "Suplemento"],
+            "prov": ["Drogueria Norte", "Drogueria Sur", "Farmacity Dist", "Medistore"]
+        }
+
         form_frame = ctk.CTkFrame(add_win, fg_color="transparent")
         form_frame.pack(fill="both", expand=True, padx=20)
 
-        # Crear los campos de entrada vacíos
+        # Crear los campos de forma dinámica
         for key, label in field_config:
-             ctk.CTkLabel(form_frame, text=label).pack(anchor="w", pady=(8, 2))
-             entry = ctk.CTkEntry(form_frame)
-             entry.pack(fill="x")
-             fields[key] = entry
-
+            ctk.CTkLabel(form_frame, text=label).pack(anchor="w", pady=(8, 2))
+            
+            # Si la clave está en nuestras opciones, creamos un ComboBox
+            if key in opciones_desplegables:
+                # state="readonly" evita que el usuario escriba valores fuera de la lista
+                entry = ctk.CTkComboBox(form_frame, values=opciones_desplegables[key], state="readonly")
+                entry.set("Seleccionar...") # Valor por defecto
+            else:
+                # Si no, creamos un campo de texto normal
+                entry = ctk.CTkEntry(form_frame)
+                
+            entry.pack(fill="x")
+            fields[key] = entry
 
         def save_new_product():
             # Validar números
@@ -196,8 +212,9 @@ class InventarioMixin:
             new_product = {}
             for key in ("prod", "marca", "cat", "prov"):
                 value = fields[key].get().strip()
-                if not value:
-                    messagebox.showerror("Datos incompletos", "Completa todos los campos de texto.")
+                # Validamos que no esté vacío y que no se haya quedado en "Seleccionar..."
+                if not value or value == "Seleccionar...":
+                    messagebox.showerror("Datos incompletos", f"Completa el campo de texto o selecciona una opción válida.")
                     return
                 new_product[key] = value
 
@@ -219,7 +236,7 @@ class InventarioMixin:
             # Actualizar la vista de la tabla
             self.update_inventory_table()
             
-            # Actualizar otras vistas si es necesario (igual que en editar)
+            # Actualizar otras vistas si es necesario
             if hasattr(self, "products_frame") and self.products_frame.winfo_exists():
                 self.filter_sale_products()
 
