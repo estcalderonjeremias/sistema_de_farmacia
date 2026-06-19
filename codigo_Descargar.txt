@@ -4,3 +4,5 @@ password: 1234
 pip install Pillow
 
 import mysql.connector
+
+sqlite viewer
