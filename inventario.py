@@ -222,8 +222,8 @@ class InventarioMixin:
             # Actualizar otras vistas si es necesario (igual que en editar)
             if hasattr(self, "products_frame") and self.products_frame.winfo_exists():
                 self.filter_sale_products()
-                
-                add_win.destroy()
+
+            add_win.destroy()
 
         buttons_frame = ctk.CTkFrame(add_win, fg_color="transparent")
         buttons_frame.pack(fill="x", padx=20, pady=20)
