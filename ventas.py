@@ -102,8 +102,8 @@ class VentasMixin:
         filters_row = ctk.CTkFrame(header_left, fg_color="transparent")
         filters_row.pack(fill="x")
 
-        ctk.CTkComboBox(filters_row, values=["Todas las drogas"]).pack(side="left", expand=True, padx=2)
-        ctk.CTkComboBox(filters_row, values=["Todos los laboratorios"]).pack(side="left", expand=True, padx=2)
+        ctk.CTkComboBox(filters_row, values=["Todas las categorias"]).pack(side="left", expand=True, padx=2)
+        ctk.CTkComboBox(filters_row, values=["Todos las marcas"]).pack(side="left", expand=True, padx=2)
         ctk.CTkComboBox(filters_row, values=["Todos los proveedores"]).pack(side="left", expand=True, padx=2)
 
         self.products_frame = ctk.CTkScrollableFrame(self.ns_win, fg_color="transparent")
@@ -163,8 +163,8 @@ class VentasMixin:
 
             badges_frame = ctk.CTkFrame(info_frame, fg_color="transparent")
             badges_frame.pack(anchor="w", pady=(2, 0))
-            ctk.CTkLabel(badges_frame, text=f"Lab: {p['marca']}", text_color="#6366f1", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0, 5))
-            ctk.CTkLabel(badges_frame, text=f"Droga: {p['cat']}", text_color="#a855f7", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0, 5))
+            ctk.CTkLabel(badges_frame, text=f"Marca: {p['marca']}", text_color="#6366f1", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0, 5))
+            ctk.CTkLabel(badges_frame, text=f"Categoria: {p['cat']}", text_color="#a855f7", font=ctk.CTkFont(size=10)).pack(side="left", padx=(0, 5))
             ctk.CTkLabel(badges_frame, text=f"Prov: {p['prov']}", text_color="#10b981", font=ctk.CTkFont(size=10)).pack(side="left")
 
             action_frame = ctk.CTkFrame(card, fg_color="transparent")

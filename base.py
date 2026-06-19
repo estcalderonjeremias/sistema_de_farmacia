@@ -17,17 +17,17 @@ CREATE TABLE IF NOT EXISTS categoria (
     nombre_categoria VARCHAR(35) NOT NULL UNIQUE   
 )
 """)
-
+#cambiar legajo por id
 cur.execute("""
 CREATE TABLE IF NOT EXISTS marca (
     legajo_marca INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre_marca VARCHAR(35) NOT NULL UNIQUE
 )
 """)
-
+#cambiar legajo por id
 cur.execute("""
 CREATE TABLE IF NOT EXISTS productos (
-    legajo_ptoducto INTEGER PRIMARY KEY AUTOINCREMENT,
+    legajo_producto INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre VARCHAR(35) NOT NULL UNIQUE,
     stock INTEGER NOT NULL,
     precio INTEGER NOT NULL,
