@@ -43,7 +43,7 @@ class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin):
         ]
 
         self.cart = []
-        self.low_stock_limit = 10
+        self.low_stock_limit = 25
         self.metric_values = {}
 
         self.setup_ui()
