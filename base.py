@@ -27,18 +27,14 @@ CREATE TABLE IF NOT EXISTS marca (
 #cambiar legajo por id
 cur.execute("""
 CREATE TABLE IF NOT EXISTS productos (
-<<<<<<< HEAD
     id_producto INTEGER PRIMARY KEY AUTOINCREMENT,
-=======
-    legajo_producto INTEGER PRIMARY KEY AUTOINCREMENT,
->>>>>>> 709cb9300774b6142504298895874a863544fd7a
     nombre VARCHAR(35) NOT NULL UNIQUE,
     stock INTEGER NOT NULL,
     precio INTEGER NOT NULL,
-    legajo_marca INTEGER,
-    legajo_categoria INTEGER,
-    FOREIGN KEY (legajo_marca) REFERENCES marca(legajo_marca),
-    FOREIGN KEY (legajo_categoria) REFERENCES categoria(legajo_categoria)
+    id_marca INTEGER,
+    id_categoria INTEGER,
+    FOREIGN KEY (id_marca) REFERENCES marca(id_marca),
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 )
 """)
 
