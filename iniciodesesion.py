@@ -4,9 +4,11 @@ from tkinter import messagebox  # Importamos el módulo para ventanas emergentes
 import os
 import subprocess
 import sys
+import sqlite3
 from PIL import Image, ImageTk # Importamos PIL para manejo avanzado de imágenes
 
-
+conn = sqlite3.connect("labase.db")
+cur = conn.cursor()
 # --- CONFIGURACIÓN GLOBAL ---
 ctk.set_appearance_mode("light")  
 ctk.set_default_color_theme("blue")  

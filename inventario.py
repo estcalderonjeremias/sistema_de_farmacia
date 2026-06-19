@@ -1,7 +1,9 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
+import sqlite3
 
-
+conn = sqlite3.connect("labase.db")
+cur = conn.cursor()
 class InventarioMixin:
     def build_inventory_tab(self):
         self.inventory_tab = self.tabview.tab("Inventario")
