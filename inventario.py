@@ -209,31 +209,63 @@ class InventarioMixin:
             if stock < 0 or precio < 0 or costo < 0:
                 messagebox.showerror("Datos inválidos", "El stock, precio y costo no pueden ser negativos.")
                 return
-
-            # Crear el diccionario del nuevo producto
-            new_product = {}
-            for key in ("prod", "marca", "cat", "prov"):
-                value = fields[key].get().strip()
-                # Validamos que no esté vacío y que no se haya quedado en "Seleccionar..."
-                if not value or value == "Seleccionar...":
-                    messagebox.showerror("Datos incompletos", f"Completa el campo de texto o selecciona una opción válida.")
-                    return
-                new_product[key] = value
-
-            new_product["stock"] = stock
-            new_product["precio"] = precio
-            new_product["costo"] = costo
-
-            # Generar ID dinámico (busca el máximo ID actual y le suma 1)
-            if self.inventory:
-                new_id = max(p["id"] for p in self.inventory) + 1
-            else:
-                new_id = 1  # Si el inventario está vacío, empieza en 1
             
-            new_product["id"] = new_id
+            # Obtener los datos escritos por el usuario
+            nombre = fields["prod"].get().strip()
+            marca = fields["marca"].get().strip()
+            categoria = fields["cat"].get().strip()
 
-            # Agregar el producto a la lista de inventario principal
-            self.inventory.append(new_product)
+            # Verificar que los campos no estén vacíos
+            if not nombre or not marca or not categoria:
+              messagebox.showerror("Datos incompletos", "Completa todos los campos.")
+              return
+
+           # Buscar el ID de la marca
+            cur.execute(
+               "SELECT id_marca FROM marca WHERE nombre_marca = ?",
+                (marca,)
+            )
+            resultado = cur.fetchone()
+
+            if resultado is None:
+              messagebox.showerror("Error", "La marca no existe.")
+            conn.close()
+            return
+
+            id_marca = resultado[0]
+
+            # Buscar el ID de la categoría
+            cur.execute(
+              "SELECT id_categoria FROM categoria WHERE nombre_categoria = ?",
+              (categoria,)
+            )
+            resultado = cur.fetchone()
+
+            if resultado is None:
+               messagebox.showerror("Error", "La categoría no existe.")
+               conn.close()
+               return
+
+            id_categoria = resultado[0]
+
+            # Insertar el producto
+            cur.execute("""
+            INSERT INTO productos
+             (nombre, stock, precio, id_marca, id_categoria)
+             VALUES (?, ?, ?, ?, ?)
+              """, (
+              nombre,
+              stock,
+              precio,
+              id_marca,
+              id_categoria
+            ))
+
+            # Guardar cambios
+            conn.commit()
+
+            # Cerrar la conexión
+            conn.close()
 
             # Actualizar la vista de la tabla
             self.update_inventory_table()
@@ -244,12 +276,12 @@ class InventarioMixin:
 
             add_win.destroy()
 
-        buttons_frame = ctk.CTkFrame(add_win, fg_color="transparent")
-        buttons_frame.pack(fill="x", padx=20, pady=20)
+    buttons_frame = ctk.CTkFrame(add_win, fg_color="transparent")
+    buttons_frame.pack(fill="x", padx=20, pady=20)
 
-        # Botones de guardar y cancelar
-        ctk.CTkButton(buttons_frame, text="Guardar producto", fg_color="#10b981", hover_color="#059669", command=save_new_product).pack(side="right", padx=(5, 0))
-        ctk.CTkButton(buttons_frame, text="Cancelar", fg_color="gray", hover_color="darkgray", command=add_win.destroy).pack(side="right")
+   # Botones de guardar y cancelar
+    ctk.CTkButton(buttons_frame, text="Guardar producto", fg_color="#10b981", hover_color="#059669", command=save_new_product).pack(side="right", padx=(5, 0))
+    ctk.CTkButton(buttons_frame, text="Cancelar", fg_color="gray", hover_color="darkgray", command=add_win.destroy).pack(side="right")
 
     def delete_product(self):
         product = self.get_selected_inventory_product()

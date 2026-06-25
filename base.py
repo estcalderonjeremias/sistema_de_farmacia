@@ -24,26 +24,26 @@ CREATE TABLE IF NOT EXISTS marca (
     nombre_marca VARCHAR(35) NOT NULL UNIQUE
 )
 """)
-#cambiar legajo por id
+
+cur.execute("""
+CREATE TABLE IF NOT EXISTS proveedores (
+    id_proveedor INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre VARCHAR(35) NOT NULL UNIQUE,
+""")
+
 cur.execute("""
 CREATE TABLE IF NOT EXISTS productos (
     id_producto INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre VARCHAR(35) NOT NULL UNIQUE,
     stock INTEGER NOT NULL,
     precio INTEGER NOT NULL,
+    costo INTEGER NOT NULL,
     id_marca INTEGER,
     id_categoria INTEGER,
+    id_proveedor INTEGER,
+    FOREIGN KEY (id_proveedor) REFERENCES proveedores(id_proveedor)
     FOREIGN KEY (id_marca) REFERENCES marca(id_marca),
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
-)
-""")
-
-cur.execute("""
-CREATE TABLE IF NOT EXISTS proveedores (
-    id_proveedor INTEGER PRIMARY KEY AUTOINCREMENT,
-    nombre VARCHAR(35) NOT NULL UNIQUE,
-    id_producto INTEGER,
-    FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
 )
 """)
 
