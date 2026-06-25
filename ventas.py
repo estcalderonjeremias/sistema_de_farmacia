@@ -241,7 +241,8 @@ class VentasMixin:
                 "prod": item["prod"],
                 "cant": item["cant"],
                 "total": item["precio"] * item["cant"],
-                "fecha": datetime.now().strftime("%Y-%m-%d %H:%M")
+                "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                "empleado": "Empleado"
             })
 
             for p in self.inventory:
@@ -252,6 +253,8 @@ class VentasMixin:
         self.update_stock_alert()
         self.filter_sales()
         self.update_metric_cards()
+        if hasattr(self, "update_stats_dashboard"):
+            self.update_stats_dashboard()
 
         messagebox.showinfo("Exito", f"Venta completada con exito. Total: ${total:.2f}")
         self.ns_win.destroy()
