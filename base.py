@@ -56,5 +56,10 @@ CREATE TABLE IF NOT EXISTS ventas (
 )
 """)
 
+cur.execute("""
+INSERT INTO usuarios (email, contraseña)
+VALUES (?, ?)
+""", ("admin@farmacia.com", "1234"))
+
 conn.commit()
 conn.close()
