@@ -30,7 +30,7 @@ class EstadisticasMixin:
 
         filters = ctk.CTkFrame(self.stats_scroll, fg_color="#2b2b2b", corner_radius=8)
         filters.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(0, 12))
-        filters.grid_columnconfigure((0, 1, 2), weight=1)
+        filters.grid_columnconfigure((0, 1, 2), weight =1)
 
         self._build_filter(filters, 0, "Mes", self.stats_month_var, self.get_stats_month_options())
         self._build_filter(filters, 1, "Empleado", self.stats_employee_var, self.get_stats_employee_options())

@@ -20,18 +20,15 @@ class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin, Estadisti
         self.geometry("1100x750")
 
         self.inventory = []
+        self.load_inventory_from_db()
 
-        self.sales_history = [
-            {"id": "#1", "prod": "Paracetamol 500mg", "cant": 2, "total": 11.00, "fecha": "2026-03-15 10:30", "empleado": "Juan Perez"},
-            {"id": "#2", "prod": "Ibuprofeno 400mg", "cant": 1, "total": 7.00, "fecha": "2026-03-16 11:15", "empleado": "Maria Garcia"},
-            {"id": "#3", "prod": "Amoxicilina 500mg", "cant": 3, "total": 37.50, "fecha": "2026-03-20 14:20", "empleado": "Juan Perez"},
-            {"id": "#4", "prod": "Omeprazol 20mg", "cant": 2, "total": 32.00, "fecha": "2026-02-25 09:45", "empleado": "Ana Empleada"},
-        ]
+        self.sales_history = []
+        self.load_sales_from_db()
 
         self.cart = []
-        self.low_stock_limit = 25
+        self.low_stock_limit = 5
         self.metric_values = {}
-
+ 
         self.setup_ui()
 
     def setup_ui(self):

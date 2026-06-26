@@ -1,9 +1,49 @@
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 from datetime import datetime
+import sqlite3
 
 
 class VentasMixin:
+    def ensure_sales_schema(self):
+        with self.get_db_connection() as conn:
+            columns = [row[1] for row in conn.execute("PRAGMA table_info(ventas)").fetchall()]
+            if "total" not in columns:
+                conn.execute("ALTER TABLE ventas ADD COLUMN total REAL DEFAULT 0")
+            if "fecha" not in columns:
+                conn.execute("ALTER TABLE ventas ADD COLUMN fecha TEXT")
+            if "empleado" not in columns:
+                conn.execute("ALTER TABLE ventas ADD COLUMN empleado TEXT DEFAULT 'Empleado'")
+
+    def load_sales_from_db(self):
+        self.ensure_sales_schema()
+        self.sales_history = []
+
+        with self.get_db_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            sales = conn.execute("""
+                SELECT
+                    v.num_venta,
+                    v.cant_vendida,
+                    v.total,
+                    v.fecha,
+                    COALESCE(v.empleado, 'Empleado') AS empleado,
+                    COALESCE(p.nombre, 'Producto eliminado') AS producto
+                FROM ventas v
+                LEFT JOIN productos p ON p.legajo_ptoducto = v.id_producto
+                ORDER BY v.num_venta DESC
+            """).fetchall()
+
+        for sale in sales:
+            self.sales_history.append({
+                "id": f"#{sale['num_venta']}",
+                "prod": sale["producto"],
+                "cant": sale["cant_vendida"],
+                "total": float(sale["total"] or 0),
+                "fecha": sale["fecha"] or "",
+                "empleado": sale["empleado"],
+            })
+
     def build_sales_tab(self):
         self.sales_tab = self.tabview.tab("Ventas")
         self.sales_tab.grid_columnconfigure(0, weight=1)
@@ -233,22 +273,45 @@ class VentasMixin:
             return
 
         total = sum(i["precio"] * i["cant"] for i in self.cart)
-        nuevo_id = f"#{len(self.sales_history) + 1}"
+        fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-        for item in self.cart:
-            self.sales_history.insert(0, {
-                "id": nuevo_id,
-                "prod": item["prod"],
-                "cant": item["cant"],
-                "total": item["precio"] * item["cant"],
-                "fecha": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                "empleado": "Empleado"
-            })
+        try:
+            self.ensure_sales_schema()
+            with self.get_db_connection() as conn:
+                for item in self.cart:
+                    current_stock = conn.execute(
+                        "SELECT stock FROM productos WHERE legajo_ptoducto = ?",
+                        (item["id"],)
+                    ).fetchone()
 
-            for p in self.inventory:
-                if p["id"] == item["id"]:
-                    p["stock"] -= item["cant"]
+                    if current_stock is None:
+                        messagebox.showerror("Error", f"El producto {item['prod']} ya no existe en la base.")
+                        return
 
+                    if current_stock[0] < item["cant"]:
+                        messagebox.showwarning("Stock Insuficiente", f"No hay stock suficiente de {item['prod']}.")
+                        return
+
+                    conn.execute("""
+                        INSERT INTO ventas (cant_vendida, id_producto, total, fecha, empleado)
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (
+                        item["cant"],
+                        item["id"],
+                        item["precio"] * item["cant"],
+                        fecha,
+                        "Empleado",
+                    ))
+                    conn.execute(
+                        "UPDATE productos SET stock = stock - ? WHERE legajo_ptoducto = ?",
+                        (item["cant"], item["id"])
+                    )
+        except sqlite3.Error as error:
+            messagebox.showerror("Error", f"No se pudo guardar la venta: {error}")
+            return
+
+        self.load_sales_from_db()
+        self.load_inventory_from_db()
         self.update_inventory_table()
         self.update_stock_alert()
         self.filter_sales()

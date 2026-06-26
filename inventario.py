@@ -2,9 +2,86 @@ import customtkinter as ctk
 from tkinter import ttk, messagebox
 import sqlite3
 
-conn = sqlite3.connect("labase.db")
-cur = conn.cursor()
+
+DB_PATH = "labase.db"
+
+DEFAULT_OPTIONS = {
+    "marca": ["Bago", "Bayer", "Generico", "GlaxoSmithKline", "Novartis", "Pfizer", "Porta", "Redoxon", "Roche", "Roemmers", "Ultra-Health"],
+    "cat": ["Analgesico", "Antiagregante", "Antibiotico", "Antidiabetico", "Antihistaminico", "Antihipertensivo", "Antiinflamatorio", "Cardiovascular", "Gastrico", "Higiene", "Psicotropico", "Respiratorio", "Suplemento"],
+    "prov": ["Drogueria Norte", "Drogueria Sur", "Farmacity Dist", "Medistore"],
+}
+
+
 class InventarioMixin:
+    def get_db_connection(self):
+        return sqlite3.connect(DB_PATH)
+
+    def ensure_inventory_schema(self):
+        with self.get_db_connection() as conn:
+            columns = [row[1] for row in conn.execute("PRAGMA table_info(productos)").fetchall()]
+            if "proveedor_nombre" not in columns:
+                conn.execute("ALTER TABLE productos ADD COLUMN proveedor_nombre TEXT")
+
+    def load_inventory_from_db(self):
+        self.ensure_inventory_schema()
+        self.inventory = []
+
+        with self.get_db_connection() as conn:
+            conn.row_factory = sqlite3.Row
+            products = conn.execute("""
+                SELECT
+                    p.legajo_ptoducto,
+                    p.nombre,
+                    p.stock,
+                    p.precio,
+                    COALESCE(m.nombre_marca, '') AS marca,
+                    COALESCE(c.nombre_categoria, '') AS categoria,
+                    COALESCE(p.proveedor_nombre, pr.nombre, '') AS proveedor
+                FROM productos p
+                LEFT JOIN marca m ON m.legajo_marca = p.legajo_marca
+                LEFT JOIN categoria c ON c.legajo_categoria = p.legajo_categoria
+                LEFT JOIN proveedores pr ON pr.id_producto = p.legajo_ptoducto
+                ORDER BY p.legajo_ptoducto
+            """).fetchall()
+
+        for product in products:
+            self.inventory.append({
+                "id": product["legajo_ptoducto"],
+                "prod": product["nombre"],
+                "marca": product["marca"],
+                "cat": product["categoria"],
+                "prov": product["proveedor"],
+                "stock": product["stock"],
+                "precio": float(product["precio"]),
+                "costo": 0,
+            })
+
+    def get_combo_options(self, option_key, table, column):
+        return DEFAULT_OPTIONS[option_key]
+
+    def get_or_create_lookup_id(self, conn, table, id_column, name_column, value):
+        row = conn.execute(
+            f"SELECT {id_column} FROM {table} WHERE {name_column} = ?",
+            (value,)
+        ).fetchone()
+        if row:
+            return row[0]
+
+        cursor = conn.execute(
+            f"INSERT INTO {table} ({name_column}) VALUES (?)",
+            (value,)
+        )
+        return cursor.lastrowid
+
+    def refresh_inventory_views(self):
+        self.load_inventory_from_db()
+        self.update_inventory_table()
+        self.update_metric_cards()
+        if hasattr(self, "products_frame") and self.products_frame.winfo_exists():
+            self.filter_sale_products()
+        if hasattr(self, "update_stats_dashboard"):
+            self.update_stats_dashboard()
+
     def build_inventory_tab(self):
         self.inventory_tab = self.tabview.tab("Inventario")
         self.inventory_tab.grid_columnconfigure(0, weight=1)
@@ -86,10 +163,20 @@ class InventarioMixin:
         form_frame = ctk.CTkFrame(edit_win, fg_color="transparent")
         form_frame.pack(fill="both", expand=True, padx=20)
 
+        opciones_desplegables = {
+            "marca": self.get_combo_options("marca", "marca", "nombre_marca"),
+            "cat": self.get_combo_options("cat", "categoria", "nombre_categoria"),
+            "prov": self.get_combo_options("prov", "proveedores", "nombre"),
+        }
+
         for key, label in field_config:
             ctk.CTkLabel(form_frame, text=label).pack(anchor="w", pady=(8, 2))
-            entry = ctk.CTkEntry(form_frame)
-            entry.insert(0, str(product[key]))
+            if key in opciones_desplegables:
+                entry = ctk.CTkComboBox(form_frame, values=opciones_desplegables[key], state="readonly")
+                entry.set(product[key] if product[key] in opciones_desplegables[key] else "Seleccionar...")
+            else:
+                entry = ctk.CTkEntry(form_frame)
+                entry.insert(0, str(product[key]))
             entry.pack(fill="x")
             fields[key] = entry
 
@@ -106,20 +193,49 @@ class InventarioMixin:
                 messagebox.showerror("Datos invalidos", "Stock, precio y costo no pueden ser negativos.")
                 return
 
-            for key in ("prod", "marca", "cat", "prov"):
-                value = fields[key].get().strip()
-                if not value:
-                    messagebox.showerror("Datos incompletos", "Completa todos los campos de texto.")
-                    return
-                product[key] = value
+            nombre = fields["prod"].get().strip()
+            marca = fields["marca"].get().strip()
+            categoria = fields["cat"].get().strip()
+            proveedor = fields["prov"].get().strip()
 
-            product["stock"] = stock
-            product["precio"] = precio
-            product["costo"] = costo
+            if (
+                not nombre
+                or marca == "Seleccionar..."
+                or categoria == "Seleccionar..."
+                or proveedor == "Seleccionar..."
+            ):
+                messagebox.showerror("Datos incompletos", "Completa todos los campos.")
+                return
 
-            self.update_inventory_table()
-            if hasattr(self, "products_frame") and self.products_frame.winfo_exists():
-                self.filter_sale_products()
+            try:
+                with self.get_db_connection() as conn:
+                    id_marca = self.get_or_create_lookup_id(conn, "marca", "legajo_marca", "nombre_marca", marca)
+                    id_categoria = self.get_or_create_lookup_id(conn, "categoria", "legajo_categoria", "nombre_categoria", categoria)
+                    conn.execute("""
+                        UPDATE productos
+                        SET nombre = ?, stock = ?, precio = ?, legajo_marca = ?, legajo_categoria = ?, proveedor_nombre = ?
+                        WHERE legajo_ptoducto = ?
+                    """, (
+                        nombre,
+                        stock,
+                        precio,
+                        id_marca,
+                        id_categoria,
+                        proveedor,
+                        product["id"],
+                    ))
+                    conn.execute(
+                        "INSERT OR IGNORE INTO proveedores (nombre) VALUES (?)",
+                        (proveedor,)
+                    )
+            except sqlite3.IntegrityError as error:
+                if "productos.nombre" in str(error):
+                    messagebox.showerror("Producto duplicado", "Ya existe un producto con ese nombre.")
+                else:
+                    messagebox.showerror("Error", f"No se pudo editar el producto: {error}")
+                return
+
+            self.refresh_inventory_views()
             edit_win.destroy()
 
         buttons_frame = ctk.CTkFrame(edit_win, fg_color="transparent")
@@ -170,11 +286,10 @@ class InventarioMixin:
             ("costo", "Costo"),
         ]
 
-        # Listas estáticas basadas en los datos de tu inventario (ordenadas alfabéticamente)
         opciones_desplegables = {
-            "marca": ["Bago", "Bayer", "Generico", "GlaxoSmithKline", "Novartis", "Pfizer", "Porta", "Redoxon", "Roche", "Roemmers", "Ultra-Health"],
-            "cat": ["Analgesico", "Antiagregante", "Antibiotico", "Antidiabetico", "Antihistaminico", "Antihipertensivo", "Antiinflamatorio", "Cardiovascular", "Gastrico", "Higiene", "Psicotropico", "Respiratorio", "Suplemento"],
-            "prov": ["Drogueria Norte", "Drogueria Sur", "Farmacity Dist", "Medistore"]
+            "marca": self.get_combo_options("marca", "marca", "nombre_marca"),
+            "cat": self.get_combo_options("cat", "categoria", "nombre_categoria"),
+            "prov": self.get_combo_options("prov", "proveedores", "nombre"),
         }
 
         form_frame = ctk.CTkFrame(add_win, fg_color="transparent")
@@ -214,74 +329,55 @@ class InventarioMixin:
             nombre = fields["prod"].get().strip()
             marca = fields["marca"].get().strip()
             categoria = fields["cat"].get().strip()
+            proveedor = fields["prov"].get().strip()
 
             # Verificar que los campos no estén vacíos
-            if not nombre or not marca or not categoria:
-              messagebox.showerror("Datos incompletos", "Completa todos los campos.")
-              return
+            if (
+                not nombre
+                or marca == "Seleccionar..."
+                or categoria == "Seleccionar..."
+                or proveedor == "Seleccionar..."
+            ):
+                messagebox.showerror("Datos incompletos", "Completa todos los campos.")
+                return
 
-           # Buscar el ID de la marca
-            cur.execute(
-               "SELECT id_marca FROM marca WHERE nombre_marca = ?",
-                (marca,)
-            )
-            resultado = cur.fetchone()
+            try:
+                with self.get_db_connection() as conn:
+                    id_marca = self.get_or_create_lookup_id(conn, "marca", "legajo_marca", "nombre_marca", marca)
+                    id_categoria = self.get_or_create_lookup_id(conn, "categoria", "legajo_categoria", "nombre_categoria", categoria)
+                    conn.execute("""
+                        INSERT INTO productos
+                            (nombre, stock, precio, legajo_marca, legajo_categoria, proveedor_nombre)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    """, (
+                        nombre,
+                        stock,
+                        precio,
+                        id_marca,
+                        id_categoria,
+                        proveedor,
+                    ))
+                    conn.execute(
+                        "INSERT OR IGNORE INTO proveedores (nombre) VALUES (?)",
+                        (proveedor,)
+                    )
+            except sqlite3.IntegrityError as error:
+                if "productos.nombre" in str(error):
+                    messagebox.showerror("Producto duplicado", "Ya existe un producto con ese nombre.")
+                else:
+                    messagebox.showerror("Error", f"No se pudo guardar el producto: {error}")
+                return
 
-            if resultado is None:
-              messagebox.showerror("Error", "La marca no existe.")
-            conn.close()
-            return
-
-            id_marca = resultado[0]
-
-            # Buscar el ID de la categoría
-            cur.execute(
-              "SELECT id_categoria FROM categoria WHERE nombre_categoria = ?",
-              (categoria,)
-            )
-            resultado = cur.fetchone()
-
-            if resultado is None:
-               messagebox.showerror("Error", "La categoría no existe.")
-               conn.close()
-               return
-
-            id_categoria = resultado[0]
-
-            # Insertar el producto
-            cur.execute("""
-            INSERT INTO productos
-             (nombre, stock, precio, id_marca, id_categoria)
-             VALUES (?, ?, ?, ?, ?)
-              """, (
-              nombre,
-              stock,
-              precio,
-              id_marca,
-              id_categoria
-            ))
-
-            # Guardar cambios
-            conn.commit()
-
-            # Cerrar la conexión
-            conn.close()
-
-            # Actualizar la vista de la tabla
-            self.update_inventory_table()
-            
-            # Actualizar otras vistas si es necesario
-            if hasattr(self, "products_frame") and self.products_frame.winfo_exists():
-                self.filter_sale_products()
+            self.refresh_inventory_views()
 
             add_win.destroy()
 
-    buttons_frame = ctk.CTkFrame(add_win, fg_color="transparent")
-    buttons_frame.pack(fill="x", padx=20, pady=20)
+        buttons_frame = ctk.CTkFrame(add_win, fg_color="transparent")
+        buttons_frame.pack(fill="x", padx=20, pady=20)
 
-   # Botones de guardar y cancelar
-    ctk.CTkButton(buttons_frame, text="Guardar producto", fg_color="#10b981", hover_color="#059669", command=save_new_product).pack(side="right", padx=(5, 0))
-    ctk.CTkButton(buttons_frame, text="Cancelar", fg_color="gray", hover_color="darkgray", command=add_win.destroy).pack(side="right")
+        # Botones de guardar y cancelar
+        ctk.CTkButton(buttons_frame, text="Guardar producto", fg_color="#10b981", hover_color="#059669", command=save_new_product).pack(side="right", padx=(5, 0))
+        ctk.CTkButton(buttons_frame, text="Cancelar", fg_color="gray", hover_color="darkgray", command=add_win.destroy).pack(side="right")
 
     def delete_product(self):
         product = self.get_selected_inventory_product()
@@ -291,5 +387,8 @@ class InventarioMixin:
         if not messagebox.askyesno("Confirmar", f"Eliminar {product['prod']} del inventario?"):
             return
 
-        self.inventory.remove(product)
-        self.update_inventory_table()
+        with self.get_db_connection() as conn:
+            conn.execute("DELETE FROM proveedores WHERE id_producto = ?", (product["id"],))
+            conn.execute("DELETE FROM productos WHERE legajo_ptoducto = ?", (product["id"],))
+
+        self.refresh_inventory_views()
