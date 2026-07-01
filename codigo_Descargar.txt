@@ -6,3 +6,6 @@ pip install Pillow
 import mysql.connector
 
 sqlite viewer
+
+empleado@farmacia.com
+1234

@@ -6,6 +6,7 @@ from recetas import RecetasMixin
 from estadisticas import EstadisticasMixin
 from ventas import VentasMixin
 import sqlite3
+import sys
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
@@ -55,13 +56,19 @@ class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin, Estadisti
         self.tabview.add("Inventario")
         self.tabview.add("Ventas")
         self.tabview.add("Recetas")
-        self.tabview.add("Estadisticas")
+        
+        self.role = sys.argv[1] if len(sys.argv) > 1 else "admin"
+
+        if self.role != "empleado":
+            self.tabview.add("Estadisticas")
 
         self.setup_treeview_style()
         self.build_inventory_tab()
         self.build_sales_tab()
         self.build_recipes_tab()
-        self.build_stats_tab()
+        
+        if self.role != "empleado":
+            self.build_stats_tab()
 
         self.update_metric_cards()
         self.update_stock_alert()

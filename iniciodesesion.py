@@ -127,14 +127,22 @@ class App(ctk.CTk):
         password = self.pass_entry.get()
         
         if email == "admin@farmacia.com" and password == "1234":
-            messagebox.showinfo("Éxito", f"Bienvenido de nuevo, {email}")
+            messagebox.showinfo("Éxito", f"Bienvenido Administrador")
             subprocess.Popen(
-                [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pantallaprincipal.py")],
+                [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pantallaprincipal.py"), "admin"],
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
             self.destroy()
             
-        elif "@" not in email or email not in ".com":
+        elif email == "empleado@farmacia.com" and password == "1234":
+            messagebox.showinfo("Éxito", f"Bienvenido Empleado")
+            subprocess.Popen(
+                [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)), "pantallaprincipal.py"), "empleado"],
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+            self.destroy()
+            
+        elif "@" not in email or ".com" not in email:
             messagebox.showinfo("Error", f"campo de email sin @ o .com")
         else:
             messagebox.showerror("Error", "Usuario o contraseña incorrectos")

@@ -59,6 +59,15 @@ class VentasMixin:
             hover_color="#4f46e5",
             font=ctk.CTkFont(weight="bold"),
             command=self.open_new_sale_window
+        ).pack(side="right", padx=(10, 0))
+
+        ctk.CTkButton(
+            header_frame,
+            text="Eliminar Venta",
+            fg_color="#ef4444",
+            hover_color="#b91c1c",
+            font=ctk.CTkFont(weight="bold"),
+            command=self.delete_sale
         ).pack(side="right")
 
         filters_frame = ctk.CTkFrame(self.sales_tab, fg_color="transparent")
@@ -359,3 +368,42 @@ class VentasMixin:
         self.search_sale_var.set("")
         self.month_filter_var.set("Todos los meses")
         self.filter_sales()
+
+    def delete_sale(self):
+        selected_item = self.tree_sales.selection()
+        if not selected_item:
+            messagebox.showwarning("Seleccion", "Por favor, seleccione una venta de la lista para eliminar.")
+            return
+
+        item_values = self.tree_sales.item(selected_item[0], "values")
+        sale_id_str = item_values[0]
+        try:
+            sale_id = int(sale_id_str.replace("#", ""))
+        except ValueError:
+            messagebox.showerror("Error", "ID de venta invalido.")
+            return
+
+        confirm = messagebox.askyesno("Confirmar", f"Estas seguro de que deseas eliminar la venta {sale_id_str}?\nSe restaurara el stock del producto.")
+        if not confirm:
+            return
+
+        try:
+            with self.get_db_connection() as conn:
+                sale = conn.execute("SELECT cant_vendida, id_producto FROM ventas WHERE num_venta = ?", (sale_id,)).fetchone()
+                if sale:
+                    conn.execute("UPDATE productos SET stock = stock + ? WHERE legajo_ptoducto = ?", (sale[0], sale[1]))
+                conn.execute("DELETE FROM ventas WHERE num_venta = ?", (sale_id,))
+                
+            self.load_sales_from_db()
+            self.load_inventory_from_db()
+            self.update_inventory_table()
+            self.update_stock_alert()
+            self.filter_sales()
+            self.update_metric_cards()
+            if hasattr(self, "update_stats_dashboard"):
+                self.update_stats_dashboard()
+                
+            messagebox.showinfo("Exito", f"Venta {sale_id_str} eliminada correctamente.")
+        except sqlite3.Error as e:
+            messagebox.showerror("Error", f"No se pudo eliminar la venta: {e}")
+

@@ -143,7 +143,7 @@ class InventarioMixin:
     def open_product_editor(self, product):
         edit_win = ctk.CTkToplevel(self)
         edit_win.title("Editar Producto")
-        edit_win.geometry("420x500")
+        edit_win.geometry("420x680")
         edit_win.attributes("-topmost", True)
         edit_win.grab_set()
 
@@ -268,8 +268,8 @@ class InventarioMixin:
         # Crear la ventana secundaria
         add_win = ctk.CTkToplevel(self)
         add_win.title("Agregar Nuevo Producto")
-        # Aumentamos ligeramente el alto a 550 para que los desplegables tengan buen espacio
-        add_win.geometry("420x550") 
+        # Aumentamos ligeramente el alto para que los botones sean visibles sin estirar
+        add_win.geometry("420x680") 
         add_win.attributes("-topmost", True)
         add_win.grab_set()
 
