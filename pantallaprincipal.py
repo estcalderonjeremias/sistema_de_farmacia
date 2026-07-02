@@ -2,7 +2,6 @@ import customtkinter as ctk
 from tkinter import ttk
 
 from inventario import InventarioMixin
-from recetas import RecetasMixin
 from estadisticas import EstadisticasMixin
 from ventas import VentasMixin
 import sqlite3
@@ -13,7 +12,7 @@ ctk.set_default_color_theme("blue")
 
 conn = sqlite3.connect("labase.db")
 cur = conn.cursor()
-class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin, EstadisticasMixin):
+class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, EstadisticasMixin):
     def __init__(self):
         super().__init__()
 
@@ -55,7 +54,6 @@ class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin, Estadisti
         self.tabview.grid(row=2, column=0, padx=20, pady=0, sticky="nsew", rowspan=3)
         self.tabview.add("Inventario")
         self.tabview.add("Ventas")
-        self.tabview.add("Recetas")
         
         self.role = sys.argv[1] if len(sys.argv) > 1 else "admin"
 
@@ -65,7 +63,7 @@ class PharmacyApp(ctk.CTk, InventarioMixin, VentasMixin, RecetasMixin, Estadisti
         self.setup_treeview_style()
         self.build_inventory_tab()
         self.build_sales_tab()
-        self.build_recipes_tab()
+        
         
         if self.role != "empleado":
             self.build_stats_tab()
