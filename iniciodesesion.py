@@ -9,11 +9,11 @@ from PIL import Image, ImageTk # Importamos PIL para manejo avanzado de imágene
 
 conn = sqlite3.connect("labase.db")
 cur = conn.cursor()
-# --- CONFIGURACIÓN GLOBAL ---
+#  CONFIGURACIÓN GLOBAL 
 ctk.set_appearance_mode("light")  
 ctk.set_default_color_theme("blue")  
 
-# --- DEFINICIÓN DE LA CLASE PRINCIPAL ---
+#  DEFINICIÓN DE LA CLASE PRINCIPAL 
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()  # Inicializa la configuración de la ventana padre (CTk)
@@ -23,14 +23,11 @@ class App(ctk.CTk):
         self.geometry("400x550")        # Aumentar un poco la altura para la imagen
         self.resizable(False, False)    # Evita que se deforme el fondo al estirar la ventana
 
-        # Configuración del sistema de cuadrícula (Grid)
+        # Configuración del sistema de cuadrícula 
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # ==========================================
-        # --- NUEVO: AGREGAR IMAGEN DE FONDO ---
-        # ==========================================
-        # PON AQUÍ LA DIRECCIÓN DE TU FOTO DE FONDO
+        
         ruta_fondo = os.path.join(os.path.dirname(os.path.abspath(__file__)), "imagenes", "fondo.png")
         
         if not os.path.exists(ruta_fondo):
@@ -46,18 +43,18 @@ class App(ctk.CTk):
             size=(800, 750)
         )
 
-        # Crear el Label del fondo y posicionarlo para que ocupe TODO
+        # Crear el Label del fondo y posicionarlo para que ocupe todo
         self.label_fondo = ctk.CTkLabel(self, image=self.imagen_fondo_ctk, text="")
         self.label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
-        # ==========================================
+       
 
-        # --- CREACIÓN DEL CONTENEDOR (FRAME) ---
+       
         # Añadimos fg_color para controlar el color del cuadro blanco del login
-        # Puedes usar "white" o un tono grisáceo para que contraste con tu fondo
+        
         self.main_frame = ctk.CTkFrame(self, corner_radius=15, fg_color="#F0F0F0") 
         self.main_frame.grid(row=0, column=0, padx=30, pady=30, sticky="nsew")
 
-        # --- AGREGAR LA IMAGEN DE LOGO ---
+        
         ruta_imagen = os.path.join(os.path.dirname(os.path.abspath(__file__)), "imagenes", "logoo.png")
         
         if not os.path.exists(ruta_imagen):
@@ -84,9 +81,9 @@ class App(ctk.CTk):
         )
         self.image_label.pack(pady=(20, 10)) 
 
-        # --- ETIQUETA DE TÍTULO PRINCIPAL ---
+        
       
-        # --- ETIQUETA DE TÍTULO DE INICIO ---
+        #  ETIQUETA DE TÍTULO DE INICIO 
         self.label_iniciar = ctk.CTkLabel(
             self.main_frame, 
             text="Iniciar Sesión para continuar", 
@@ -94,7 +91,7 @@ class App(ctk.CTk):
         )
         self.label_iniciar.pack(pady=(5, 5)) 
         
-        # --- CAMPO DE TEXTO: USUARIO ---   
+        #  CAMPO DE TEXTO: USUARIO   
         self.mail_entry = ctk.CTkEntry(
             self.main_frame, 
             width=250, 
@@ -102,7 +99,7 @@ class App(ctk.CTk):
         )
         self.mail_entry.pack(pady=10) 
 
-        # --- CAMPO DE TEXTO: CONTRASEÑA ---
+        # CAMPO DE TEXTO: CONTRASEÑA 
         self.pass_entry = ctk.CTkEntry(
             self.main_frame, 
             width=250, 
@@ -111,7 +108,7 @@ class App(ctk.CTk):
         )
         self.pass_entry.pack(pady=10)
 
-        # --- BOTÓN DE ENTRADA ---
+        #  BOTÓN DE ENTRADA 
         self.login_button = ctk.CTkButton(
             self.main_frame, 
             text="Entrar", 
@@ -121,7 +118,7 @@ class App(ctk.CTk):
         self.login_button.pack(pady=(25, 20)) 
 
 
-    # --- LÓGICA DE VALIDACIÓN ---
+    # LÓGICA DE VALIDACIÓN 
     def login_event(self):
         email = self.mail_entry.get()
         password = self.pass_entry.get()
@@ -147,7 +144,7 @@ class App(ctk.CTk):
         else:
             messagebox.showerror("Error", "Usuario o contraseña incorrectos")
 
-    # --- PUNTO DE ENTRADA DEL PROGRAMA ---
+    #  PUNTO DE ENTRADA DEL PROGRAMA 
 if __name__ == "__main__":
     app = App()       
     app.mainloop()
